@@ -1,0 +1,226 @@
+﻿<!DOCTYPE html>
+<html lang="">
+<head>
+    <meta charset="utf-8">
+    <title></title>
+
+    <script src="../pano/leador-pano.js"></script>
+
+    <style>
+        html, body
+        {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        .pano
+        {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="container" class="pano">
+    </div>
+  <!--  <div class=' btn btn-group ' style='width:50%'>
+        <div class='btn btn-default btn-xs ' style='background-color: #fff; color: rgba(61,61,61,1);border: 0; color:  rgba(61,61,61,1); width: 10%' id='play_star' data='0'>
+            <span>开始</span>
+        </div>
+        <div class='btn progress' style='width: 65%; background-color: #fff'>
+            <div class='progress-bar progress-bar-success' style='width: 0.01%;' aiarmaxwidth='100'
+                aiarminwidth='0' id='play_line'>
+            </div>
+        </div>
+        <div class='btn btn-default btn-xs' style='width: 10%; background-color: #fff; color: rgba(61,61,61,1);
+            border: 0; ' id='play_value' value='0'>
+            0.00 %
+        </div>
+        <div class='btn btn-default btn-xs' style='width: 10%; background-color: #fff; color: rgba(61,61,61,1);
+            border: 0; ' id='play_slipt' value='15'>
+            1.5x 中速
+        </div>
+        <div class='btn btn-default btn-xs' style='width: 5%; background-color: #fff; color: rgba(61,61,61,1);
+            border: 0; ' id='play_close'>
+            <span class='glyphicon glyphicon-remove'></span>
+        </div>
+    </div>-->
+
+    <script>
+
+
+        var pano = new LeadorPano('container', {
+            position: { lng: 116.37074629843, lat: 39.931245801454 }, //AD_CODE[i][1] 114.3806000290,"Y":22.7038430580  //{lng:109.5135232110,lat:18.2954517930}
+            pluginArrow: true,
+            loadingTxt: '场景加载中',
+            loadMarker: false
+        });
+
+        // window.open('example/DMI.html', 'DMI双目量测', 'height=600,width=800,top=100,left=100,toolbar=no,menutool=no,location=no,scroll=no;resizable=no'); //,height=600,width=800,top=100,left=100,toolbar=null
+
+        /*  var rotate_ = true;
+        var eles = document.getElementById('edit');
+        eles.addEventListener('click', function(e) {
+        switch (e.target.id) {
+        case "toggleAutoRotate":
+        pano.toggleAutoRotate(rotate_)
+        if (rotate_) {
+        rotate_ = false;
+        } else {
+        rotate_ = true;
+        }
+        break;
+        case "getViewPosition":
+        var wh = pano.getViewPosition()
+        pano.message('lng:' + wh.lng + ",lat:" + wh.lat, 3000)
+        break;
+        case "rotate":
+        pano.setAngle({ lng: Math.random() * 100, lat: Math.random() * 40 })
+        break;
+        case "setAnimateAngle":
+        pano.setAnimateAngle({ lng: Math.random() * 100, lat: Math.random() * 10 }, 3000)
+        break;
+        case "getSize":
+        var wh = pano.getViewSize()
+        pano.message('height:' + wh.height + ",width:" + wh.width, 3000)
+        break;
+        case "toggleFullScreen":
+        pano.toggleFullScreen();
+        break;
+        case "getZoom":
+        pano.message('level:' + pano.getZoom(), 3000)
+        break;
+        case "setZoom":
+        pano.setZoom(Math.random() * 100);
+        break;
+        case "toggleArrow":
+        pano.toggleArrow();
+        break;
+        case "setStationStepP":
+        pano.setStationStep(pano.getStation().StationID, -1);
+        break;
+        case "setStationStepN":
+        pano.setStationStep(pano.getStation().StationID, 1);
+        break;
+        case "getStation":
+        pano.message(JSON.stringify(pano.getStation()), 5000)
+        break;
+        case "setStationByCoord":
+        pano.setStationByCoord({
+        tel: 0.001,
+        position: {
+        //lng: 110.7780776000,
+        // lat: 32.6138837000
+
+                            lng: 114.3806000290, lat: 22.7038430580
+        }
+        })
+        break;
+        case "getLocation":
+        pano.message(JSON.stringify(pano.getLocation()), 5000)
+        break;
+        case "Measure":
+        Measure()
+        break;
+        case "addMarker":
+        pano.once('click', function(e) {
+        var opt = {
+        content: e.lng + pano.getStation().Address,
+        position: { lng: e.lng, lat: e.lat },
+        tag: e.lng + pano.getStation().Address,
+        stationid: pano.getStation().StationID,
+        type: '0',
+        symbolguid: '',
+        className: 'pano-tag'
+        }
+
+                        pano.addMarker(opt, function(data) {
+        if (data.Status == 1) {
+        pano.message('标记 [ ' + opt.content + ' ] 添加成功！', 5000);
+        } else {
+        pano.message('标记 [ ' + opt.content + ' ] 添加失败！', 5000);
+        }
+        })
+        });
+
+                    break;
+        case "clearMarker":
+        pano.clearMarkers();
+        break;
+        case "deleteMarker":
+        pano.once('select-marker', function(e) {
+        var m = pano.getCurrentMarker();
+        pano.deleteMarker(m, function(data) {
+        if (data.Status == 1) pano.message('成功删除！', 5000);
+        });
+        })
+
+                    break;
+        case "selectMarker":
+        pano.toggleMarkersList();
+        break;
+        case "loadMarkers":
+        pano.loadMarkers();
+        break;
+        case "gotoMarker":
+
+                    pano.once('select-marker', function(e) {
+        pano.setAnimateAngle({ lng: e.lng, lat: e.lat }, 3000)
+        })
+        break;
+        case "goRoute":
+        pano.message('准备全景导航', 2000);
+
+                    pano.getRoute({
+        end: { lng: 80.2748544381, lat: 41.1503636639 }, // 80.2748544381,"Y":41.1503636639,
+        begin: { lng: 80.2764292828, lat: 41.1507822404} //80.2764292828,"Y":41.1507822404
+        }, function(data) {
+        var paths = '', lnglat = [], index = 0;
+        if (data.status == 0) {
+
+                            for (var i in data.result.routes[0].steps) {
+        paths += ';' + data.result.routes[0].steps[i].path;
+        }
+        paths = paths.substring(1, paths.length);
+
+                        }
+        for (var i in paths.split(';')) {
+        var coord = GPS.gcj02towgs84(paths.split(';')[i].split(',')[0], paths.split(';')[i].split(',')[1]);
+        lnglat.push([coord.lng, coord.lat]);
+        }
+
+                        pano.message('< 导航开始 >', 2000);
+        var pano_outitme = setInterval(function() {
+        if (lnglat[index]) {
+        pano.setStationByCoord({
+        tel: 0.00005,
+        position: {
+        lng: lnglat[index][0], lat: lnglat[index][1]
+        }
+        })
+        index++;
+
+                            } else {
+        clearTimeout(pano_outitme);
+        }
+        }, 3000)
+
+                    });
+        break;
+        }
+        })
+        */
+
+
+     
+    
+    </script>
+
+</body>
+</html>

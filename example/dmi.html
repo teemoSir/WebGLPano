@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <link charset='utf-8' rel='stylesheet' href='http://1.97.81.108/dist/bootstrap-3.3.7/css/bootstrap.min.css'>
+    <link charset='utf-8' rel='stylesheet' href='http://1.97.81.108/dist/ishowchina-pano.css'>
+
+    <script charset='utf-8' src='http://1.97.81.108/dist/ishowchina-pano.js'></script>
+
+    <script charset='utf-8' src='http://1.97.81.108/dist/jquery-3.2.1.min.js'></script>
+
+    <script charset='utf-8' src='http://1.97.81.108/dist/bootstrap-3.3.7/js/bootstrap.min.js'></script>
+
+    <style>
+        html, body
+        {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        .container
+        {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 80%;
+            height: 100%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class='panel panel-default' id='load' style='margin: 0 auto; width: 1060px;
+        border: 1px solid #ccc; box-shadow: 3px 3px 3px #000; display: none'>
+        <!-- <span onclick='celiang2Exit()' class='glyphicon glyphicon-remove btn-lg'></span>-->
+        <table class='model-leador'>
+            <tr>
+                <td>
+                    <p class='text-success'>
+                        <span class='glyphicon glyphicon-eye-open'></span> 点击缩略图列表切换相机视角。</p>
+                </td>
+                <td>
+                    <div class='btn btn-group pull-right'>
+                        <button onclick='Marker()' class='btn btn-success'>
+                            <span class='glyphicon glyphicon-plus'></span>添加节点</button>
+                        <button onclick='Clear()' class='btn btn-danger'>
+                            <span class='glyphicon glyphicon-remove-circle'></span>清空节点</button></div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <canvas id='left_image' style='z-index: 100'>Loading . . . </canvas>
+                </td>
+                <td>
+                    <canvas id='right_image' style='z-index: 100'>Loading . . .</canvas>
+                </td>
+            </tr>
+            <tr style='text-align: center;'>
+                <td colspan='2' id='list'>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        var dmi;
+        window.onload = function() {
+            var Search = window.location.search;
+            if (!Search) {
+                return false;
+            }
+
+
+            var station = Search.split('?')[1].split(',')[0];
+            var code = Search.split('?')[1].split(',')[1];
+
+
+            dmi = new LeadorDMI(station, code, callback);
+
+            function callback(data) {
+                if (data.Status != 1) {
+                    window.location.href = 'http://1.97.81.108/example/dmi-no.html';
+                    return false;
+                }
+
+                // var load = document.getElementById('load');
+
+                //正想地理编码
+                var lnglat = { lng: data.Station.X, lat: data.Station.Y }
+
+                geoDmi(lnglat, geoDmicallback);
+            }
+
+            function geoDmi(lnglat, geoDmicallback) {
+                dmi.getReGeo({
+                    url: PANO_CONFIG.TWS_PANO_REGEO.concat().replace('{location}', lnglat.lng + ',' + lnglat.lat),
+                    callback: function(data) {
+                        if (data.status == 0) {
+                            if (geoDmicallback) geoDmicallback(data);
+                        }
+                    }
+                })
+
+            }
+
+            function geoDmicallback(data) {
+                if (data.status == 0) {
+                    var location = { adCode: data.result[0].addressComponent.adCode,
+                        cityCode: data.result[0].addressComponent.cityCode,
+                        city: data.result[0].addressComponent.city,
+                        district: data.result[0].addressComponent.district,
+                        province: data.result[0].addressComponent.province,
+                        street: data.result[0].addressComponent.street,
+                        serviceCode: code + '_dmi',
+                        street_number: data.result[0].addressComponent.street
+                    };
+
+                    dmi.setDMILocation(location);
+
+                    dmi.getDMICameraInfo(function(data) {
+                        //打印
+                        if (data.Status == 1) {
+                            load.style.display = 'block';
+                            printStationToHtml(data.Sizes);
+                            console.log(data.Sizes);
+                        }
+
+                    })
+                }
+            }
+
+        }
+
+        //点击切换
+        function faceClick(image) {
+            var ele = {
+                left_image: document.getElementById('left_image'),
+                right_image: document.getElementById('right_image')
+            }
+
+
+
+            var modelUrl = dmi.getDMIImageList();
+
+            var cam = dmi.Camera;
+            var bigMap = [];
+            for (var i in cam) {
+                if (isNaN(cam[i].CameraNo) == false) {
+
+                    bigMap.push({
+                        left: modelUrl.replace('{index}', cam[i].Pair.split('-')[0]),
+                        right: modelUrl.replace('{index}', cam[i].Pair.split('-')[1])
+                    });
+                    console.log(bigMap)
+                }
+            }
+
+
+            return false;
+        }
+
+
+        function printStationToHtml(data) {
+            var panel = [], bigImage = [], src = [];
+
+            var modelUrl = dmi.getDMIImageList(dmi.getDMIStation().StationID);
+            var stationID = dmi.getDMIStation().StationID.substring(0, 6) + '-{faceindex}-' + dmi.getDMIStation().StationID.substring(9, 27);
+
+            for (var i in data) {
+                if (isNaN(data[i].CameraNo) == false) {
+                    var url = modelUrl.replace('{index}', data[i].CameraNo)
+                    //  panel.push("<img src='{face}' id='{faceindex}' onclick='faceClick(this)' class='pano-image' style='z-index:90'>".replace('{face}',url).replace('{faceindex}','face'+data[i].CameraNo));
+
+                    if (bigImage.length != 2) {
+                        bigImage.push(url);
+                        src.push(stationID.replace('{faceindex}', data[i].CameraNo));
+                    }
+                }
+
+            }
+
+            var panopanel = document.getElementById('list');
+            panopanel.innerHTML = panel.join('');
+
+            var ele = {
+                left: document.getElementById('left_image'),
+                right: document.getElementById('right_image')
+            }
+            // 绑定Stationid到Canvas
+            ele.left.stationSrc = bigImage[0];
+            ele.right.stationSrc = bigImage[1];
+
+            // 绑定stationid到canvas
+            ele.left.stationID = src[0]
+            ele.right.stationID = src[1]
+
+            // 更新资源地址
+            loadImageToCanvas(ele.left)
+            loadImageToCanvas(ele.right)
+
+        }
+
+        // 标记
+        function Marker() {
+            var ele = {
+                left: document.getElementById('left_image'),
+                right: document.getElementById('right_image')
+            }
+
+            // 绑定颜色
+            ele.left._tagcolor = 'red';
+            ele.right._tagcolor = 'yellow';
+
+            ele.left.style.cursor = 'crosshair';
+            ele.right.style.cursor = 'crosshair';
+
+            // 绑定事件
+            ele.left.addEventListener('click', canvasClick);
+            ele.right.addEventListener('click', canvasClick);
+        }
+
+        // 清理重置
+        function Clear() {
+            if (dmi._MeasureNodeArray) {
+                dmi._MeasureNodeArray = { left_node_array: [], right_node_array: [], double_eye_stationid: [], node_coord: [] };
+            }
+            clearCanvas();
+
+        }
+
+        // 画布事件
+        function canvasClick(e) {
+
+            if (!dmi._MeasureNodeArray) {
+                dmi._MeasureNodeArray = { left_node_array: [], right_node_array: [], double_eye_stationid: [], node_coord: [] };
+            }
+            // 获得画布坐标
+            var position = getCanvasPos(e, this);
+
+            // 绘制点
+            var pointMarker = {
+                color: this._tagcolor,
+                path: [position.x, position.y, 10, 10],
+                text: '节点:' + (dmi._MeasureNodeArray.right_node_array.length + 1),
+                font: '13px bold 微软雅黑'
+            }
+            drawCanvasMarker(this, pointMarker)
+            // 缓存点数组
+            if (this._tagcolor == 'red') {
+                dmi._MeasureNodeArray.left_node_array.push(position);
+                dmi._MeasureNodeArray.double_eye_stationid[0] = this.stationID;
+            }
+            else if (this._tagcolor == 'yellow') {
+                dmi._MeasureNodeArray.right_node_array.push(position);
+                dmi._MeasureNodeArray.double_eye_stationid[1] = this.stationID;
+
+            }
+            //  绘制线
+            if (dmi._MeasureNodeArray.right_node_array.length >= 2) {
+                drawDoubleLine();
+            }
+
+            //获得坐标
+            if (this._tagcolor == 'yellow') {
+
+                var option = {
+                    leftid: dmi._MeasureNodeArray.double_eye_stationid[0],
+                    leftx: dmi._MeasureNodeArray.left_node_array[dmi._MeasureNodeArray.left_node_array.length - 1].x / 512 * dmi.Camera[0].Width,
+                    lefty: dmi._MeasureNodeArray.left_node_array[dmi._MeasureNodeArray.left_node_array.length - 1].y / 512 * dmi.Camera[0].Height,
+                    rightid: dmi._MeasureNodeArray.double_eye_stationid[1],
+                    rightx: dmi._MeasureNodeArray.right_node_array[dmi._MeasureNodeArray.right_node_array.length - 1].x / 512 * dmi.Camera[1].Width,
+                    righty: dmi._MeasureNodeArray.right_node_array[dmi._MeasureNodeArray.right_node_array.length - 1].y / 512 * dmi.Camera[1].Height
+                }
+                console.log(dmi.Camera[0], dmi.Camera[1], option)
+                dmi.getDMIMeasure(option, callback);
+
+                function callback(data) {
+                    //console.log(data);
+                    if (data.Status != '1') {
+                        return false;
+                    }
+                    // 缓存节点
+                    dmi._MeasureNodeArray.node_coord.push(data.Point);
+                    // 计算距离
+                    if (dmi._MeasureNodeArray.node_coord.length >= 2) {
+                        var a = dmi._MeasureNodeArray.node_coord[dmi._MeasureNodeArray.node_coord.length - 2];
+                        var b = dmi._MeasureNodeArray.node_coord[dmi._MeasureNodeArray.node_coord.length - 1]
+
+                        var aaa = a.X - b.X;
+                        var bbb = a.Y - b.Y;
+                        //console.log(Math.pow(aaa,2)+Math.pow(bbb,2));
+
+                        var dis = dmi.getJLByCoord({ lat: a.X, lon: a.Y }, { lat: b.X, lon: b.Y });
+                        console.log(dis);
+
+                        // 打印距离到画布
+                        printDis(dis / 6)
+
+                    }
+                }
+            }
+
+            // 停止当前绘制
+            this.removeEventListener('click', canvasClick);
+
+            // 恢复鼠标
+            this.style.cursor = 'default';
+        }
+        function printDis(dis) {
+            var x = dmi._MeasureNodeArray.left_node_array[dmi._MeasureNodeArray.left_node_array.length - 2].x + (dmi._MeasureNodeArray.left_node_array[dmi._MeasureNodeArray.left_node_array.length - 1].x - dmi._MeasureNodeArray.left_node_array[dmi._MeasureNodeArray.left_node_array.length - 2].x) / 2;
+            var y = dmi._MeasureNodeArray.left_node_array[dmi._MeasureNodeArray.left_node_array.length - 2].y + (dmi._MeasureNodeArray.left_node_array[dmi._MeasureNodeArray.left_node_array.length - 1].y - dmi._MeasureNodeArray.left_node_array[dmi._MeasureNodeArray.left_node_array.length - 2].y) / 2;
+
+
+            drawCanvasMarker(document.getElementById('left_image'), {
+                color: document.getElementById('left_image')._tagcolor,
+                path: [x, y, 0.1, 0.1],
+                text: dis + ' 米', // (dis).toString().fixed(2)
+                font: '12px bold 微软雅黑'
+            })
+
+
+        }
+
+        function drawDoubleLine() {
+            var ele = {
+                left: document.getElementById('left_image'),
+                right: document.getElementById('right_image')
+            }
+            // 绘制左侧线
+            drawCanvasLine(ele.left, {
+                color: ele.left._tagcolor,
+                begin: dmi._MeasureNodeArray.left_node_array[dmi._MeasureNodeArray.left_node_array.length - 2],
+                end: dmi._MeasureNodeArray.left_node_array[dmi._MeasureNodeArray.left_node_array.length - 1]
+            });
+            // 绘制右侧线
+            drawCanvasLine(ele.right, {
+                color: ele.right._tagcolor,
+                begin: dmi._MeasureNodeArray.right_node_array[dmi._MeasureNodeArray.right_node_array.length - 2],
+                end: dmi._MeasureNodeArray.right_node_array[dmi._MeasureNodeArray.right_node_array.length - 1]
+            });
+
+        }
+
+        //  加载图片到画布
+        function loadImageToCanvas(canvas, src) {
+
+            canvas.width = 512;
+            canvas.height = 390;
+            var ctx = canvas.getContext('2d');
+            var img = new Image;
+            img.crossOrigin = 'Anonymous'; //解决跨域
+            img.src = canvas.stationSrc;
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, 512, 389, 0, 0, 512, 389);
+                ctx.save();
+
+            }
+        }
+
+        // 获得画布坐标
+        function getCanvasPos(event, canvas) {
+            var x = event.clientX - canvas.getBoundingClientRect().left;
+            var y = event.clientY - canvas.getBoundingClientRect().top;
+            return { x: x, y: y }
+        }
+
+        /**
+        *   画布绘制点
+        * @param {object} canvas 画布
+        * @param {object} options
+        * @param {string} options.color 填充色
+        * @param {string} options.font 字体及颜色大小
+        * @param {string} options.text 标签文字
+        * @param {string} options.path 矩形坐标[x,y,width,height]
+        * @author  luwenjun@leader.com.cn
+        */
+        function drawCanvasMarker(canvas, options) {
+            var ctx = canvas.getContext('2d');
+            ctx.fillStyle = options.color;
+            ctx.fillRect(options.path[0] - 5, options.path[1] - 5, options.path[2], options.path[3]);
+            ctx.font = options.font;
+            ctx.fillText(options.text, options.path[0] - 20, options.path[1] + 20);
+
+        }
+        /**
+        *   画布绘制线
+        * @param {object} canvas 画布
+        * @param {object} options
+        * @param {string} options.color 填充色
+        * @param {string} options.font 字体及颜色大小
+        * @param {string} options.text 标签文字
+        * @param {string} options.path 矩形坐标[x,y,width,height]
+        * @author  luwenjun@leader.com.cn
+        */
+        function drawCanvasLine(canvas, options) {
+            var ctx = canvas.getContext('2d');
+            ctx.beginPath();
+            ctx.strokeStyle = options.color;
+            ctx.moveTo(options.begin.x, options.begin.y);
+            ctx.lineTo(options.end.x, options.end.y);
+            ctx.stroke();
+        }
+
+        function clearCanvas() {
+            var pageurl = dmi.getDMIImageList();
+            var ele = {
+                left: document.getElementById('left_image'),
+                right: document.getElementById('right_image')
+            }
+            // 更新资源地址
+            loadImageToCanvas(ele.left)
+            loadImageToCanvas(ele.right)
+        }
+
+    </script>
+
+</body>
+</html>

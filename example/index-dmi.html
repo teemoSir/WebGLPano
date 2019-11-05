@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html>
+<html lang="">
+<head>
+    <meta charset="utf-8">
+    <title></title>
+
+    <script src="../pano/leador-pano.js"></script>
+
+    <style>
+        html, body
+        {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        .pano
+        {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        #edit
+        {
+            display: none;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            z-index: 1000000;
+            width: 20%;
+            height: 100%;
+            overflow-y: scroll;
+        }
+        #edit div
+        {
+            padding: 10px;
+        }
+      
+    </style>
+</head>
+<body>
+    <div id="container" class="pano">
+    </div>
+    <div class="dmi-panel">
+        <img style="width: 20%; height: 50%; padding: 0; margin-left: -5px" src="http://1.97.81.108:2019/guiyang_dmi/Image3DResourceService/GetImageTile/?clientType=2&amp;ImageID=000271-A-201412050651320150&amp;row=0&amp;col=0&amp;zoom=3">
+        <img style="width: 20%; height: 50%; padding: 0; margin-left: -5px" src="http://1.97.81.108:2019/guiyang_dmi/Image3DResourceService/GetImageTile/?clientType=2&amp;ImageID=000271-A-201412050651320150&amp;row=0&amp;col=1&amp;zoom=3">
+        <img style="width: 20%; height: 50%; padding: 0; margin-left: -5px" src="http://1.97.81.108:2019/guiyang_dmi/Image3DResourceService/GetImageTile/?clientType=2&amp;ImageID=000271-A-201412050651320150&amp;row=0&amp;col=2&amp;zoom=3">
+        <img style="width: 20%; height: 50%; padding: 0; margin-left: -5px" src="http://1.97.81.108:2019/guiyang_dmi/Image3DResourceService/GetImageTile/?clientType=2&amp;ImageID=000271-A-201412050651320150&amp;row=0&amp;col=3&amp;zoom=3">
+        <img style="width: 20%; height: 50%; padding: 0; margin-left: -5px" src="http://1.97.81.108:2019/guiyang_dmi/Image3DResourceService/GetImageTile/?clientType=2&amp;ImageID=000271-A-201412050651320150&amp;row=0&amp;col=4&amp;zoom=3">
+        <img style="width: 20%; height: 50%; padding: 0; margin-left: -5px" src="http://1.97.81.108:2019/guiyang_dmi/Image3DResourceService/GetImageTile/?clientType=2&amp;ImageID=000271-A-201412050651320150&amp;row=1&amp;col=0&amp;zoom=3">
+        <img style="width: 20%; height: 50%; padding: 0; margin-left: -5px" src="http://1.97.81.108:2019/guiyang_dmi/Image3DResourceService/GetImageTile/?clientType=2&amp;ImageID=000271-A-201412050651320150&amp;row=1&amp;col=1&amp;zoom=3">
+        <img style="width: 20%; height: 50%; padding: 0; margin-left: -5px" src="http://1.97.81.108:2019/guiyang_dmi/Image3DResourceService/GetImageTile/?clientType=2&amp;ImageID=000271-A-201412050651320150&amp;row=1&amp;col=2&amp;zoom=3">
+        <img style="width: 20%; height: 50%; padding: 0; margin-left: -5px" src="http://1.97.81.108:2019/guiyang_dmi/Image3DResourceService/GetImageTile/?clientType=2&amp;ImageID=000271-A-201412050651320150&amp;row=1&amp;col=3&amp;zoom=3">
+        <img style="width: 20%; height: 50%; padding: 0; margin-left: -5px" src="http://1.97.81.108:2019/guiyang_dmi/Image3DResourceService/GetImageTile/?clientType=2&amp;ImageID=000271-A-201412050651320150&amp;row=1&amp;col=4&amp;zoom=3">
+    </div>
+
+    <script>
+
+        var pano = new LeadorPano('container', {
+            position: { lng: 84.8822749750, lat: 44.3023821200 },
+            pluginArrow: true,
+            loadingTxt: '场景加载中',
+            loadMarker: false
+        });
+
+      
+      
+    
+    </script>
+
+</body>
+</html>

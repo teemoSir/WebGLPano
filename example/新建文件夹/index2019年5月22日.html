@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title></title>
+
+    <script src="http://1.97.81.193:2019/pano/leador-pano.js"></script>
+
+    <style>
+        html, body
+        {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        .container
+        {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 80%;
+            height: 100%;
+            cursor: pointer;
+        }
+        #edit
+        {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            z-index: 1000000;
+            width: 20%;
+            height: 100%;
+            overflow-y: scroll;
+        }
+        #edit div
+        {
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container" class="container">
+    </div>
+    <div id="edit" class='pano-button'>
+        <div title="站点功能">
+            <b>站点功能</b><br>
+            <button type="button" id="setStationStepP">
+                后退</button>
+            <button type="button" id="setStationStepN">
+                前进</button>
+            <button type="button" id="getStation">
+                站点信息</button>
+            <button type="button" id="setStationByCoord">
+                根据坐标查询全景</button>
+        </div>
+        <div title="视野功能">
+            <b>视野功能</b><br>
+            <button type="button" id="setAnimateAngle">
+                视野飞行</button>
+            <button type="button" id="rotate">
+                设置视野</button>
+            <button type="button" id="getSize">
+                获取容器大小</button>
+            <button type="button" id="toggleAutoRotate">
+                漫游(开/关)</button>
+            <button type="button" id="getViewPosition">
+                获取视野坐标</button>
+            <button type="button" id="getZoom">
+                获取视野等级</button>
+            <button type="button" id="setZoom">
+                设置视野等级</button>
+        </div>
+        <div title="标记">
+            <b>标记</b><br>
+            <button type="button" id="addMarker" >
+                添加标记</button>
+                 <button type="button" id="deleteMarker">
+                删除标记</button>
+            <button type="button" id="selectMarker" >
+                列表查看(隐藏/显示)</button>
+            <button type="button" id="clearMarker">
+                清空标记</button>
+                <button type="button" id="loadMarkers">
+                装载标记</button>
+           
+       
+        </div>
+        <div title="服务">
+            <b>服务</b><br>
+            <button type="button" id="getLocation">
+                逆向地理编码</button>
+            <button type="button" id="Measure">
+                DMI量测</button>
+        </div>
+        <div title="控件">
+            <b>控件</b><br>
+            <button type="button" id="toggleArrow">
+                方位指向(隐藏/显示)</button>
+            <button type="button" id="toggleFullScreen">
+                全屏(开启/关闭)</button>
+        </div>
+    </div>
+
+    <script>
+
+        // 全景初始化
+         var pano = new LeadorPano('container', {
+            position: { lng: 80.2820151566, lat: 41.1540244883 }, //AD_CODE[i][1] 114.3806000290,"Y":22.7038430580
+            pluginArrow: true,
+            pluginMasure: false,
+            loadingTxt: '场景加载中...',
+            loadMarker: true
+        });
+
+
+      
+    
+       var rotate_ = true;
+        var eles = document.getElementById('edit');
+        eles.addEventListener('click', function(e) {
+            switch (e.target.id) {
+                case "toggleAutoRotate":
+                    pano.toggleAutoRotate(rotate_)
+                    if (rotate_) {
+                        rotate_ = false;
+                    } else {
+                        rotate_ = true;
+                    }
+                    break;
+                case "getViewPosition":
+                    var wh = pano.getViewPosition()
+                    pano.message('longitude:' + wh.longitude + ",lat:" + wh.latitude, 3000)
+                    break;
+                case "rotate":
+                    pano.setAngle({ longitude: Math.random() * 100, latitude: Math.random() * 10 })
+                    break;
+                case "setAnimateAngle":
+                    pano.setAnimateAngle({ longitude: Math.random() * 100, latitude: Math.random() * 10 }, 3000)
+                    break;
+                case "getSize":
+                    var wh = pano.getViewSize()
+                    pano.message('height:' + wh.height + ",width:" + wh.width, 3000)
+                    break;
+                case "toggleFullScreen":
+                    pano.toggleFullScreen();
+                    break;
+                case "getZoom":
+                    pano.message('level:' + pano.getZoom(), 3000)
+                    break;
+                case "setZoom":
+                    pano.setZoom(Math.random() * 100);
+                    break;
+                case "toggleArrow":
+                    pano.toggleArrow();
+                    break;
+                case "setStationStepP":
+                    pano.setStationStep(pano.getStation().StationID, -1);
+                    break;
+                case "setStationStepN":
+                    pano.setStationStep(pano.getStation().StationID, 1);
+                    break;
+                case "getStation":
+                    pano.message(JSON.stringify(pano.getStation()), 5000)
+                    break;
+                case "setStationByCoord":
+                    pano.setStationByCoord({
+                        tel: 0.00100,
+                        position: {
+                            //lng: 110.7780776000,
+                            // lat: 32.6138837000
+
+                            lng: 114.3806000290, lat: 22.7038430580
+                        }
+                    })
+                    break;
+                case "getLocation":
+                    pano.message(JSON.stringify(pano.getLocation()), 5000)
+                    break;
+                case "Measure":
+                    Measure()
+                    break;
+                case "addMarker":
+                    pano.once('click', function(e) {
+                        var opt = {
+                        content: e.lng + pano.getStation().Address,
+                            position: { lng: e.lng, lat: e.lat },
+                            tag: e.lng + pano.getStation().Address,
+                            stationid: pano.getStation().StationID,
+                            type: '0',
+                            symbolguid: '',
+                            style: 'font-size:14px;color:#fff;padding:2px 0px;border-bottom:2px solid #fff'
+                        }
+
+                        pano.addMarker(opt, function(data) {
+                            if (data.Status == 1) {
+                                pano.message('标记 [ ' + opt.content + ' ] 添加成功！', 5000);
+                            } else {
+                                pano.message('标记 [ ' + opt.content + ' ] 添加失败！', 5000);
+                            }
+                        })
+                    });
+
+                    break;
+                case "clearMarker":
+                    pano.clearMarkers();
+                    break;
+                case "deleteMarker":
+                    pano.once('select-marker', function(e) {
+                        var m = pano.getCurrentMarker();
+                        pano.deleteMarker(m, function(data) {
+                            if (data.Status == 1) pano.message('成功删除！', 5000);
+                        });
+                    })
+
+                    break;
+                case "selectMarker":
+                    pano.toggleMarkersList();
+                    break;
+                case "loadMarkers":
+                    pano.loadMarkers(); 
+                    break;
+            }
+        })
+
+
+      
+
+        var panel = [];
+
+        panel.push("<table class='model-leador'  id='doubleeye'>");
+        panel.push("<tr style='text-align:center'><th colspan='2'><h3>可量测实景影像(DMI)</h3></th>");
+
+        panel.push("<tr style='text-align:center'><th>站点</th><th>测量</th></tr>");
+        panel.push("<tr class='pano-button'>");
+        panel.push("<td><div style='margin-left:15px'><button onclick='StationStep(this)' id='go' >站点前进</button><button id='back'  onclick='StationStep(this)'>站点后退</button></div><div style='padding:20px;'>{station}<div></td>");
+        panel.push("<td><div style='margin-left:15px'><button onclick='Marker()'>添加节点</button><button onclick='Clear()'>删除节点</button></div></td></tr>");
+
+        panel.push("<tr style='text-align:center;'>");
+        panel.push("<td colspan='2'>");
+        panel.push("<img src='{face1}' id='face1' onclick='faceClick(this)' class='pano-image'>");
+        panel.push("<img src='{face2}' id='face2' onclick='faceClick(this)' class='pano-image'>");
+        panel.push("<img src='{face3}' id='face3' onclick='faceClick(this)' class='pano-image'>");
+        panel.push("<img src='{face4}' id='face4' onclick='faceClick(this)' class='pano-image'>");
+        panel.push("<img src='{face5}' id='face5' onclick='faceClick(this)' class='pano-image'>");
+        panel.push("<img src='{face6}' id='face6' onclick='faceClick(this)' class='pano-image'>");
+        panel.push("</tr>");
+
+
+
+
+        panel.push("<tr style='text-align:center'><td>左</td><td>右</td></tr>");
+
+        panel.push("<tr>");
+        panel.push("<td><canvas id='left_image'>Loading . . . </canvas></td>");
+        panel.push("<td><canvas id='right_image'>Loading . . .</canvas></td>");
+        panel.push("</tr>");
+
+
+
+
+
+        panel.push("</table>");
+
+
+        function Measure() {
+            pano.getDMIStationByCoord({
+                tel: 0.0001,
+                position: { lng: 114.1556955250, lat: 22.2779466350 }
+            }, function(station) {
+                printStationToHtml(station);
+            });
+        }
+
+
+        //点击切换
+        function faceClick(image) {
+            var ele = {
+                left_image: document.getElementById('left_image'),
+                right_image: document.getElementById('right_image')
+            }
+
+            var list = pano.getDMIImageList();
+
+            var stationID = pano.getDMIStation().StationID.substring(0, 6) + '-{index}-' + pano.getDMIStation().StationID.substring(9, 27);
+
+            switch (image.id) {
+                case 'face1':
+                    face(list[0], list[1], stationID.replace('{index}', 1), stationID.replace('{index}', 2))
+                    break;
+                case 'face2':
+                    face(list[0], list[1], stationID.replace('{index}', 1), stationID.replace('{index}', 2))
+                    break;
+                case 'face3':
+                    face(list[1], list[2], stationID.replace('{index}', 2), stationID.replace('{index}', 3))
+                    break;
+                case 'face4':
+                    face(list[2], list[3], stationID.replace('{index}', 3), stationID.replace('{index}', 4))
+                    break;
+                case 'face5':
+                    face(list[3], list[4], stationID.replace('{index}', 4), stationID.replace('{index}', 5))
+                    break;
+                case 'face6':
+                    face(list[4], list[5], stationID.replace('{index}', 5), stationID.replace('{index}', 6))
+                    break;
+            }
+            function face(face_left, face_right, leftid, rightid) {
+                // 绑定src到Canvas
+                ele.left_image.stationSrc = face_left;
+                ele.right_image.stationSrc = face_right;
+
+                // 绑定stationid到canvas
+                ele.left_image.stationID = leftid;
+                ele.right_image.stationID = rightid;
+
+                loadImageToCanvas(ele.left_image)
+                loadImageToCanvas(ele.right_image)
+            }
+            ele = null, list = null;
+        }
+
+        //站点的前进与后退
+        function StationStep(_this) {
+            _this.innerText = 'loading';
+            var station = pano.getDMIStation();
+
+            if (_this.id == 'go') {
+                pano.getDMIStationByID(station.Next, 'xianggang', function() {
+
+                    printStationToHtml(station.Next);
+                    _this.innerText = '前进';
+                })
+            } else if (_this.id == 'back') {
+                pano.getDMIStationByID(station.Previous, 'xianggang', function() {
+
+                    printStationToHtml(station.Previous);
+                    _this.innerText = '后退';
+                })
+            }
+
+
+        }
+
+        function printStationToHtml(station) {
+            // 详细信息
+            var text = [];
+            text.push('站点位置：' + pano.getDMILocation().province + pano.getDMILocation().city + pano.getDMILocation().district + pano.getDMILocation().street + pano.getDMIStation().Address);
+            text.push('拍摄时间：' + pano.getDMIStation().StationID.split('-')[2].substring(0, 8));
+            text.push('位置坐标：' + pano.getDMIStation().XYZ.join(','));
+
+            var pageurl = pano.getDMIImageList(station);
+            var url = panel.join('')
+                .replace('{face1}', pageurl[0])
+                .replace('{face2}', pageurl[1])
+                .replace('{face3}', pageurl[2])
+                .replace('{face4}', pageurl[3])
+                .replace('{face5}', pageurl[4])
+                .replace('{face6}', pageurl[5])
+                .replace('{station}', text.join('<br>'))
+            pano.showPanel(url);
+
+            var ele = {
+                left: document.getElementById('left_image'),
+                right: document.getElementById('right_image')
+            }
+            // 绑定Stationid到Canvas
+            ele.left.stationSrc = pageurl[0];
+            ele.right.stationSrc = pageurl[1];
+
+            var stationID = pano.getDMIStation().StationID.substring(0, 6) + '-{index}-' + pano.getDMIStation().StationID.substring(9, 27);
+
+            // 绑定stationid到canvas
+            ele.left.stationID = stationID.replace('{index}', 1);
+            ele.right.stationID = stationID.replace('{index}', 2);
+
+            // 更新资源地址
+            loadImageToCanvas(ele.left)
+            loadImageToCanvas(ele.right)
+
+        }
+
+        // 标记
+        function Marker() {
+            var ele = {
+                left: document.getElementById('left_image'),
+                right: document.getElementById('right_image')
+            }
+
+            // 绑定颜色
+            ele.left._tagcolor = 'red';
+            ele.right._tagcolor = 'yellow';
+
+            ele.left.style.cursor = 'crosshair';
+            ele.right.style.cursor = 'crosshair';
+
+            // 绑定事件
+            ele.left.addEventListener('click', canvasClick);
+            ele.right.addEventListener('click', canvasClick);
+        }
+
+        // 清理重置
+        function Clear() {
+            if (pano._MeasureNodeArray) {
+                pano._MeasureNodeArray = { left_node_array: [], right_node_array: [], double_eye_stationid: [], node_coord: [] };
+            }
+            clearCanvas();
+
+        }
+
+        // 画布事件
+        function canvasClick(e) {
+
+            if (!pano._MeasureNodeArray) {
+                pano._MeasureNodeArray = { left_node_array: [], right_node_array: [], double_eye_stationid: [], node_coord: [] };
+            }
+            // 获得画布坐标
+            var position = getCanvasPos(e, this);
+            // 绘制点
+            drawCanvasMarker(this, {
+                color: this._tagcolor,
+                path: [position.x, position.y, 10, 10],
+                text: '节点 [' + (pano._MeasureNodeArray.right_node_array.length + 1) + ']',
+                font: '16px bold 微软雅黑'
+            })
+            // 缓存点数组
+            if (this._tagcolor == 'red') {
+                pano._MeasureNodeArray.left_node_array.push(position);
+                pano._MeasureNodeArray.double_eye_stationid[0] = this.stationID;
+            }
+            else if (this._tagcolor == 'yellow') {
+                pano._MeasureNodeArray.right_node_array.push(position);
+                pano._MeasureNodeArray.double_eye_stationid[1] = this.stationID;
+
+            }
+            //  绘制线
+            if (pano._MeasureNodeArray.right_node_array.length >= 2) {
+                drawDoubleLine();
+            }
+            //获得坐标
+            if (this._tagcolor == 'yellow') {
+                var option = {
+                    leftid: pano._MeasureNodeArray.double_eye_stationid[0],
+                    leftx: pano._MeasureNodeArray.left_node_array[pano._MeasureNodeArray.left_node_array.length - 1].x * (627 / 1536), //627*472
+                    lefty: pano._MeasureNodeArray.left_node_array[pano._MeasureNodeArray.left_node_array.length - 1].y * (472 / (1536)), // 303 2048 1536
+                    rightid: pano._MeasureNodeArray.double_eye_stationid[1],
+                    rightx: pano._MeasureNodeArray.right_node_array[pano._MeasureNodeArray.right_node_array.length - 1].x * (627 / 1536),
+                    righty: pano._MeasureNodeArray.right_node_array[pano._MeasureNodeArray.right_node_array.length - 1].y * (472 / 1536 - 300)
+                }
+
+                pano.getDMIMeasure(option, callback);
+
+                function callback(data) {
+                    console.log(data);
+                    if (data.Status != '1') {
+                        return false;
+                    }
+                    // 缓存节点
+                    pano._MeasureNodeArray.node_coord.push(data.Point);
+                    // 计算距离
+                    if (pano._MeasureNodeArray.node_coord.length >= 2) {
+                        var a = pano._MeasureNodeArray.node_coord[pano._MeasureNodeArray.node_coord.length - 2];
+                        var b = pano._MeasureNodeArray.node_coord[pano._MeasureNodeArray.node_coord.length - 1]
+
+                        var dis = pano.getJLByCoord({ lat: a.X, lon: a.Y }, { lat: b.X, lon: b.Y });
+                        console.log(dis);
+
+                        // 打印距离到画布
+                        printDis(dis)
+
+                    }
+                }
+            }
+
+            // 停止当前绘制
+            this.removeEventListener('click', canvasClick);
+
+            // 恢复鼠标
+            this.style.cursor = 'default';
+        }
+        function printDis(dis) {
+            var x = pano._MeasureNodeArray.left_node_array[pano._MeasureNodeArray.left_node_array.length - 2].x + (pano._MeasureNodeArray.left_node_array[pano._MeasureNodeArray.left_node_array.length - 1].x - pano._MeasureNodeArray.left_node_array[pano._MeasureNodeArray.left_node_array.length - 2].x) / 2;
+            var y = pano._MeasureNodeArray.left_node_array[pano._MeasureNodeArray.left_node_array.length - 2].y + (pano._MeasureNodeArray.left_node_array[pano._MeasureNodeArray.left_node_array.length - 1].y - pano._MeasureNodeArray.left_node_array[pano._MeasureNodeArray.left_node_array.length - 2].y) / 2;
+
+            drawCanvasMarker(document.getElementById('left_image'), {
+                color: document.getElementById('left_image')._tagcolor,
+                path: [x, y, 0.1, 0.1],
+                text: dis + '米',
+                font: '12px bold 微软雅黑'
+            })
+
+
+        }
+
+        function drawDoubleLine() {
+            var ele = {
+                left: document.getElementById('left_image'),
+                right: document.getElementById('right_image')
+            }
+            // 绘制左侧线
+            drawCanvasLine(ele.left, {
+                color: ele.left._tagcolor,
+                begin: pano._MeasureNodeArray.left_node_array[pano._MeasureNodeArray.left_node_array.length - 2],
+                end: pano._MeasureNodeArray.left_node_array[pano._MeasureNodeArray.left_node_array.length - 1]
+            });
+            // 绘制右侧线
+            drawCanvasLine(ele.right, {
+                color: ele.right._tagcolor,
+                begin: pano._MeasureNodeArray.right_node_array[pano._MeasureNodeArray.right_node_array.length - 2],
+                end: pano._MeasureNodeArray.right_node_array[pano._MeasureNodeArray.right_node_array.length - 1]
+            });
+
+        }
+
+        //  加载图片到画布
+        function loadImageToCanvas(canvas, src) {
+
+            canvas.width = 512;
+            canvas.height = 390;
+            var ctx = canvas.getContext('2d');
+            var img = new Image;
+            img.crossOrigin = 'Anonymous'; //解决跨域
+            img.src = canvas.stationSrc;
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, 512, 390, 0, 0, 512, 390);
+                ctx.save();
+
+            }
+        }
+
+        // 获得画布坐标
+        function getCanvasPos(event, canvas) {
+            var x = event.clientX - canvas.getBoundingClientRect().left;
+            var y = event.clientY - canvas.getBoundingClientRect().top;
+            return { x: x, y: y }
+        }
+
+        /**
+        *   画布绘制点
+        * @param {object} canvas 画布
+        * @param {object} options
+        * @param {string} options.color 填充色
+        * @param {string} options.font 字体及颜色大小
+        * @param {string} options.text 标签文字
+        * @param {string} options.path 矩形坐标[x,y,width,height]
+        * @author  luwenjun@leader.com.cn
+        */
+        function drawCanvasMarker(canvas, options) {
+            var ctx = canvas.getContext('2d');
+            ctx.fillStyle = options.color;
+            ctx.fillRect(options.path[0] - 5, options.path[1] - 5, options.path[2], options.path[3]);
+            ctx.font = options.font;
+            ctx.fillText(options.text, options.path[0] - 20, options.path[1] - 10);
+
+        }
+        /**
+        *   画布绘制线
+        * @param {object} canvas 画布
+        * @param {object} options
+        * @param {string} options.color 填充色
+        * @param {string} options.font 字体及颜色大小
+        * @param {string} options.text 标签文字
+        * @param {string} options.path 矩形坐标[x,y,width,height]
+        * @author  luwenjun@leader.com.cn
+        */
+        function drawCanvasLine(canvas, options) {
+            var ctx = canvas.getContext('2d');
+            ctx.beginPath();
+            ctx.strokeStyle = options.color;
+            ctx.moveTo(options.begin.x, options.begin.y);
+            ctx.lineTo(options.end.x, options.end.y);
+            ctx.stroke();
+        }
+
+        function clearCanvas() {
+            var pageurl = pano.getDMIImageList();
+            var ele = {
+                left: document.getElementById('left_image'),
+                right: document.getElementById('right_image')
+            }
+            // 更新资源地址
+            loadImageToCanvas(ele.left)
+            loadImageToCanvas(ele.right)
+        }
+
+    
+    </script>
+
+</body>
+</html>

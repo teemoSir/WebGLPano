@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title></title>
+
+    <script src="http://1.97.81.193:2019/pano/leador-pano.js"></script>
+
+    <style>
+        html, body
+        {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        .container
+        {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 70%;
+            height: 100%;
+            cursor: pointer;
+        }
+        #edit
+        {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            z-index: 1000000;
+            width: 30%;
+            height: 100%;
+        }
+        #edit div
+        {
+            padding: 15px;
+        }
+        
+       
+    </style>
+</head>
+<body>
+    <div id="container" class="container">
+    </div>
+    <div id="edit">
+        <div title="站点方法">
+            <h4>
+                站点方法</h4>
+            <a href="#" id="setStationStepP">后退一步</a> <a href="#" id="setStationStepN">前进一步</a>
+            <a href="#" id="getStation">站点详细信息</a>  <a href="#" id="setStationByCoord">根据坐标查询全景</a> 
+        </div>
+        <div title="视野功能">
+            <h4>
+                视野功能</h4>
+            <a href="#" id="setAnimateAngle">视野飞行到坐标</a> <a href="#" id="rotate">设置视野坐标</a>
+            <a href="#" id="getSize">获取容器大小</a> <a href="#" id="toggleAutoRotate">开启/关闭漫游</a>
+            <a href="#" id="getViewPosition">获取当前视野坐标</a> <a href="#" id="getZoom">获取视野等级</a>
+            <a href="#" id="setZoom">设置视野等级</a>
+        </div>
+        <div title="标记功能">
+            <h4>
+                标记功能</h4>
+            <a href="#" id="addMarker" title="addMarker">添加</a> <a href="#" id="updateMarker">更新</a>
+            <a href="#" id="removeMarker">删除</a> <a href="#" id="clearMarker">清空</a> <a href="#"
+                id="gotoMarker">将该标记显示在视野内</a>
+        </div>
+        <div title="服务">
+            <h4>
+                全景服务</h4>
+                
+            <a href="#" id="getLocation">获取站点逆向地理编码</a>
+        </div>
+        <div title="控件">
+            <h4>
+                控件</h4>
+            <a href="#" id="toggleArrow">隐藏/显示方向指示器</a> <a href="#" id="toggleFullScreen">开启/关闭全屏</a>
+        </div>
+    </div>
+
+    <script>
+        var pano, rotate_ = true;
+        var eles = document.getElementById('edit');
+        eles.addEventListener('click', function(e) {
+            switch (e.target.id) {
+                case "toggleAutoRotate":
+                    pano.toggleAutoRotate(rotate_)
+                    if (rotate_) {
+                        rotate_ = false;
+                    } else {
+                        rotate_ = true;
+                    }
+                    break;
+                case "getViewPosition":
+                    var wh = pano.getViewPosition()
+                    pano.message('longitude:' + wh.longitude + ",lat:" + wh.latitude, 3000)
+                    break;
+                case "rotate":
+                    pano.setAngle({ longitude: Math.random() * 100, latitude: Math.random() * 10 })
+                    break;
+                case "setAnimateAngle":
+                    pano.setAnimateAngle({ longitude: Math.random() * 100, latitude: Math.random() * 10 }, 3000)
+                    break;
+                case "getSize":
+                    var wh = pano.getViewSize()
+                    pano.message('height:' + wh.height + ",width:" + wh.width, 3000)
+                    break;
+                case "toggleFullScreen":
+                    pano.toggleFullScreen();
+                    break;
+                case "getZoom":
+                    pano.message('level:' + pano.getZoom(), 3000)
+                    break;
+                case "setZoom":
+                    pano.setZoom(Math.random() * 100);
+                    break;
+                case "toggleArrow":
+                    pano.toggleArrow();
+                    break;
+                case "setStationStepP":
+                    pano.setStationStep(pano.getStation().StationID, -1);
+                    break;
+                case "setStationStepN":
+                    pano.setStationStep(pano.getStation().StationID, 1);
+                    break;
+                case "getStation":
+                    pano.message(JSON.stringify(pano.getStation()), 5000)
+                    break;
+                case "setStationByCoord":
+                    pano.setStationByCoord({
+                        tel: 0.00100,
+                        position: {
+                            //lng: 110.7780776000,
+                        // lat: 32.6138837000
+                           
+                           lng: 114.3806000290, lat: 22.7038430580
+                        }
+                    })
+                    break;
+                case "getLocation":
+                    pano.message(JSON.stringify(pano.getLocation()), 5000)
+                    break;
+                case "addMarker":
+                    var but = document.getElementById('container')
+                    pano.on('click', function(e) {
+                        pano.addMarker({
+                            content: "<p style='background-color: red'>这是xxx大道</p> ", // "<IMG src='example/assets/pin-red.png' style='width: 100px'>" +
+                            latitude: e.latitude,
+                            longitude: e.longitude
+                        })
+                    })
+                    break;
+            }
+        })
+
+
+        // 全景初始化
+        pano = new LeadorPano('container', {
+            //stationID: '005205-0-201408200429580810', //'',
+            position: { lng:80.2820151566,lat:41.1540244883 }, //AD_CODE[i][1] 114.3806000290,"Y":22.7038430580
+            data_type: PANO_DATATYPE.TWS,
+            arrow_tool: true,
+            masure_tool: false,
+            map_tool: false
+        });
+        //location.hash = "000002-X-201303210448570000";
+
+</script>
+
+</body>
+</html>
